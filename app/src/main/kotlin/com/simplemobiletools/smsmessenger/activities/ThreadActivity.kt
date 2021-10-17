@@ -173,6 +173,7 @@ class ThreadActivity : SimpleActivity() {
 
     private fun setupCachedMessages(callback: () -> Unit) {
         ensureBackgroundThread {
+            //TODO - BSZ - RSA encrypt/decrypt service
             messages = try {
                 messagesDB.getThreadMessages(threadId).toMutableList() as ArrayList<Message>
             } catch (e: Exception) {
