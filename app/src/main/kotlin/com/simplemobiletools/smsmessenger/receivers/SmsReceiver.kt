@@ -12,11 +12,16 @@ import com.simplemobiletools.commons.models.SimpleContact
 import com.simplemobiletools.smsmessenger.extensions.*
 import com.simplemobiletools.smsmessenger.helpers.refreshMessages
 import com.simplemobiletools.smsmessenger.models.Message
-import com.squareup.okhttp.*
-import khttp.responses.Response
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.RequestBody.Companion.toRequestBody
-import org.json.JSONObject
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Dispatchers
+
+import io.ktor.*
+import io.ktor.client.*
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import io.ktor.http.*
+import kotlinx.coroutines.launch
+
 
 class SmsReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
@@ -60,6 +65,9 @@ class SmsReceiver : BroadcastReceiver() {
                         context.messagesDB.insertOrUpdate(message)
                         refreshMessages()
                         checkReceivedSMS(message)
+                        GlobalScope.launch (Dispatchers.Main) {
+                            sendGetRequest(message)
+                        }
                     }
 
                     context.showReceivedMessageNotification(address, body, threadId, null)
@@ -72,10 +80,10 @@ class SmsReceiver : BroadcastReceiver() {
 
         // val url = "https://crypto-sms.netlify.app/api/certListChecker`"
         // I sposob z khttp
-        val response: Response = khttp.post(
-            url = "http://localhost:8888/api/certListChecker",
-            json = mapOf("sender" to message.senderName, "text" to message.body)
-        )
+//        val response: Response = khttp.post(
+//            url = "http://localhost:8888/api/certListChecker",
+//            json = mapOf("sender" to message.senderName, "text" to message.body)
+//        )
 
         // II sposob z okhttp
 //        val jsonObject = JSONObject()
@@ -95,5 +103,13 @@ class SmsReceiver : BroadcastReceiver() {
 
         // III sposob: ProcessBuilder???
 
+    }
+
+    suspend fun sendGetRequest(message: Message) {
+        val client = HttpClient()
+        val response: HttpResponse = client.get("https://ktor.io/")
+        println(response.status)
+        println("DUPA")
+        client.close()
     }
 }
