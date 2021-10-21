@@ -12,6 +12,11 @@ import com.simplemobiletools.commons.models.SimpleContact
 import com.simplemobiletools.smsmessenger.extensions.*
 import com.simplemobiletools.smsmessenger.helpers.refreshMessages
 import com.simplemobiletools.smsmessenger.models.Message
+import com.squareup.okhttp.*
+import khttp.responses.Response
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONObject
 
 class SmsReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
@@ -54,11 +59,38 @@ class SmsReceiver : BroadcastReceiver() {
                         val message = Message(newMessageId, body, type, status, participants, messageDate, false, threadId, false, null, address, "", subscriptionId)
                         context.messagesDB.insertOrUpdate(message)
                         refreshMessages()
+                        checkReceivedSMS(message)
                     }
 
                     context.showReceivedMessageNotification(address, body, threadId, null)
                 }
             }
         }
+    }
+
+    fun checkReceivedSMS(message: Message) {
+
+        // I sposob z khttp
+        val response: Response = khttp.post(
+            url = "http://localhost:8888/api/certListChecker",
+            json = mapOf("sender" to message.senderName, "text" to message.body)
+        )
+
+        // II sposob z okhttp
+//        val jsonObject = JSONObject()
+//        jsonObject.put("sender", message.senderName)
+//        jsonObject.put("text", message.body)
+//        val client = OkHttpClient()
+//        val JSON: MediaType = MediaType.parse("application/json; charset=utf-8")
+//        // put your json here
+//        // put your json here
+//        val body = RequestBody.create(JSON, jsonObject.toString())
+//        val request = Request.Builder()
+//            .url("http://localhost:8888/api/certListChecker")
+//            .post(body)
+//            .build()
+//
+//        val response: Response = client.newCall(request).execute()
+
     }
 }
