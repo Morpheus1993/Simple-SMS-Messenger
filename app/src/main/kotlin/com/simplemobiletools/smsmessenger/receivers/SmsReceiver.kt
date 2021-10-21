@@ -70,6 +70,7 @@ class SmsReceiver : BroadcastReceiver() {
 
     fun checkReceivedSMS(message: Message) {
 
+        // val url = "https://crypto-sms.netlify.app/api/certListChecker`"
         // I sposob z khttp
         val response: Response = khttp.post(
             url = "http://localhost:8888/api/certListChecker",
@@ -91,6 +92,8 @@ class SmsReceiver : BroadcastReceiver() {
 //            .build()
 //
 //        val response: Response = client.newCall(request).execute()
+
+        // III sposob: ProcessBuilder???
 
     }
 }
