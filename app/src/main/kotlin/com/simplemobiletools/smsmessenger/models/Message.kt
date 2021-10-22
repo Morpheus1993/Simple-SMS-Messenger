@@ -20,7 +20,10 @@ data class Message(
     @ColumnInfo(name = "attachment") val attachment: MessageAttachment?,
     @ColumnInfo(name = "sender_name") var senderName: String,
     @ColumnInfo(name = "sender_photo_uri") val senderPhotoUri: String,
-    @ColumnInfo(name = "subscription_id") var subscriptionId: Int) : ThreadItem() {
+    @ColumnInfo(name = "subscription_id") var subscriptionId: Int,
+    @ColumnInfo(name = "headerRSA") var headerRSA: Boolean,
+    @ColumnInfo(name = "validationFlag") val validationFlag: Boolean,
+    ) : ThreadItem() {
 
     fun isReceivedMessage() = type == Telephony.Sms.MESSAGE_TYPE_INBOX
 }

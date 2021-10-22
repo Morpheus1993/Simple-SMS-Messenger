@@ -104,15 +104,33 @@ fun Context.getMessages(threadId: Long): ArrayList<Message> {
         val status = cursor.getIntValue(Sms.STATUS)
         val participant = SimpleContact(0, 0, senderName, photoUri, arrayListOf(senderNumber), ArrayList(), ArrayList())
         val isMMS = false
-        val message = Message(id, body, type, status, arrayListOf(participant), date, read, thread, isMMS, null, senderName, photoUri, subscriptionId)
+        val message =
+            Message(id, body, type, status, arrayListOf(participant), date, read, thread, isMMS, null, senderName, photoUri, subscriptionId, false, false)
         messages.add(message)
     }
 
     messages.addAll(getMMS(threadId, sortOrder))
     messages = messages.filter { it.participants.isNotEmpty() }
         .sortedWith(compareBy<Message> { it.date }.thenBy { it.id }).toMutableList() as ArrayList<Message>
+    return collectLastTwoSms(messages)
+}
 
-    return messages
+private fun collectLastTwoSms(messages: ArrayList<Message>): ArrayList<Message> {
+    messages.forEach { message ->
+        try {
+            message.headerRSA = false // only for testing
+            if (!message.headerRSA) { // todo add && !message.read
+                val pattern = Regex("^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$")
+                if (pattern.containsMatchIn(message.body)) {
+                    message.headerRSA = true
+                }
+            }
+        } catch (e: Exception) {
+            println(e)
+        }
+    }
+
+    return messages.filter { sms -> !sms.headerRSA } as ArrayList<Message>;
 }
 
 // as soon as a message contains multiple recipients it counts as an MMS instead of SMS
@@ -172,7 +190,8 @@ fun Context.getMMS(threadId: Long? = null, sortOrder: String? = null): ArrayList
             senderPhotoUri = namePhoto.photoUri ?: ""
         }
 
-        val message = Message(mmsId, body, type, status, participants, date, read, threadId, isMMS, attachment, senderName, senderPhotoUri, subscriptionId)
+        val message =
+            Message(mmsId, body, type, status, participants, date, read, threadId, isMMS, attachment, senderName, senderPhotoUri, subscriptionId, false, false)
         messages.add(message)
 
         participants.forEach {
