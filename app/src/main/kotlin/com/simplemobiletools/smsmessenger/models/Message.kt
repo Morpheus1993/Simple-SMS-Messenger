@@ -5,7 +5,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.simplemobiletools.commons.models.SimpleContact
-import com.simplemobiletools.smsmessenger.helpers.SM_20_PROTOCOL_PREFIX
+import com.simplemobiletools.smsmessenger.helpers.ST_20_PROTOCOL_PREFIX
 
 @Entity(tableName = "messages")
 data class Message(
@@ -31,6 +31,9 @@ data class Message(
     fun isVerifiedRegularMessage() = !headerRSA && validationFlag
 
     companion object {
-        fun isHeader(text: String) = text.startsWith(SM_20_PROTOCOL_PREFIX)
+//        const val MSG_RSA_HEADER =
+//        const val MSG_VERIFIED =
+
+        fun isHeader(text: String) = text.startsWith(ST_20_PROTOCOL_PREFIX)
     }
 }
