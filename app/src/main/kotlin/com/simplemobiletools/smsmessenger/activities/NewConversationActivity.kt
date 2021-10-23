@@ -26,6 +26,7 @@ import kotlin.collections.ArrayList
 
 class NewConversationActivity : SimpleActivity() {
     private var allContacts = ArrayList<SimpleContact>()
+    private var allContactsToCheck = ArrayList<SimpleContact>()
     private var privateContacts = ArrayList<SimpleContact>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -233,6 +234,12 @@ class NewConversationActivity : SimpleActivity() {
             }
 
             startActivity(this)
+        }
+    }
+
+    private fun readListOfConntacts() {
+        SimpleContactsHelper(this).getAvailableContacts(false) {
+            return@getAvailableContacts
         }
     }
 }

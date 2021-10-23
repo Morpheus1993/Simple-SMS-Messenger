@@ -21,13 +21,16 @@ import android.provider.ContactsContract.PhoneLookup
 import android.provider.OpenableColumns
 import android.provider.Telephony.*
 import android.text.TextUtils
+import android.view.inputmethod.EditorInfo
 import androidx.core.app.NotificationCompat
 import androidx.core.app.RemoteInput
 import com.simplemobiletools.commons.extensions.*
 import com.simplemobiletools.commons.helpers.*
 import com.simplemobiletools.commons.models.SimpleContact
 import com.simplemobiletools.smsmessenger.R
+import com.simplemobiletools.smsmessenger.activities.NewConversationActivity
 import com.simplemobiletools.smsmessenger.activities.ThreadActivity
+import com.simplemobiletools.smsmessenger.adapters.AutoCompleteTextViewAdapter
 import com.simplemobiletools.smsmessenger.databases.MessagesDatabase
 import com.simplemobiletools.smsmessenger.helpers.*
 import com.simplemobiletools.smsmessenger.interfaces.AttachmentsDao
@@ -37,6 +40,7 @@ import com.simplemobiletools.smsmessenger.interfaces.MessagesDao
 import com.simplemobiletools.smsmessenger.models.*
 import com.simplemobiletools.smsmessenger.receivers.DirectReplyReceiver
 import com.simplemobiletools.smsmessenger.receivers.MarkAsReadReceiver
+import kotlinx.android.synthetic.main.activity_thread.*
 import java.io.FileNotFoundException
 import java.util.*
 import kotlin.collections.ArrayList
@@ -54,6 +58,8 @@ val Context.attachmentsDB: AttachmentsDao get() = getMessagessDB().AttachmentsDa
 val Context.messageAttachmentsDB: MessageAttachmentsDao get() = getMessagessDB().MessageAttachmentsDao()
 
 val Context.messagesDB: MessagesDao get() = getMessagessDB().MessagesDao()
+
+private var allContacts = ArrayList<SimpleContact>()
 
 fun Context.getMessages(threadId: Long): ArrayList<Message> {
     val uri = Sms.CONTENT_URI
@@ -116,13 +122,17 @@ fun Context.getMessages(threadId: Long): ArrayList<Message> {
 }
 
 private fun collectLastTwoSms(messages: ArrayList<Message>): ArrayList<Message> {
+
     messages.forEach { message ->
         try {
-            message.headerRSA = false // only for testing
+            //message.headerRSA = false // only for testing
             if (!message.headerRSA) { // todo add && !message.read
-                val pattern = Regex("^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$")
-                if (pattern.containsMatchIn(message.body)) {
+                val pattern1 = Regex("^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$")
+                if (pattern1.containsMatchIn(message.body.subSequence(0, 128))) {
                     message.headerRSA = true
+                }
+                if(message.body.length > 128){
+                    val id = message.body.subSequence(128, 140)
                 }
             }
         } catch (e: Exception) {
