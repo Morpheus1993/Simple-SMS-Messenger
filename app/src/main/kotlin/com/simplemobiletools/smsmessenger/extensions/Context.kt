@@ -142,7 +142,7 @@ private fun validateSMS(messages: ArrayList<Message>): ArrayList<Message> {
                 val pattern1 = Regex("^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{4})\$")
                 if(message.body.subSequence(0, 4).equals("ST20")){
                     message.headerRSA = true
-                    id = message.body.subSequence(5, 9).toString()
+                    id = message.body.subSequence(4, 10).toString()
                     signature = message.body.subSequence(10, message.body.length).toString()
                 }
                 else {
