@@ -59,5 +59,4 @@ fun refreshMessages() {
 }
 
 // SM20 unique constants
-const val SM_20_PROTOCOL_PREFIX = "SM20"
-
+const val ST_20_PROTOCOL_PREFIX = "ST20"

@@ -104,9 +104,14 @@ fun Context.getMessages(threadId: Long): ArrayList<Message> {
         val status = cursor.getIntValue(Sms.STATUS)
         val participant = SimpleContact(0, 0, senderName, photoUri, arrayListOf(senderNumber), ArrayList(), ArrayList())
         val isMMS = false
+
+        fun Cursor.getBoolValue(key: String) = this.getIntValue(key) > 0
+
+        val mes = messagesDB.getMessageById(id)
+
         val message = Message(
             id, body, type, status, arrayListOf(participant), date, read, thread, isMMS,
-            null, senderName, photoUri, subscriptionId, headerRSA = false, validationFlag = true
+            null, senderName, photoUri, subscriptionId, headerRSA = mes.headerRSA, validationFlag = mes.validationFlag
         )
         messages.add(message)
     }

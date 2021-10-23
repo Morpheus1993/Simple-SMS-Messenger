@@ -10,9 +10,7 @@ import com.simplemobiletools.commons.extensions.isNumberBlocked
 import com.simplemobiletools.commons.helpers.ensureBackgroundThread
 import com.simplemobiletools.commons.models.SimpleContact
 import com.simplemobiletools.smsmessenger.extensions.*
-import com.simplemobiletools.smsmessenger.helpers.SM_20_PROTOCOL_PREFIX
 import com.simplemobiletools.smsmessenger.helpers.refreshMessages
-import com.simplemobiletools.smsmessenger.misc.BackendClient
 import com.simplemobiletools.smsmessenger.models.Message
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Dispatchers
@@ -92,7 +90,6 @@ class SmsReceiver : BroadcastReceiver() {
     }
 
     private fun isAuthenticMessage(header: String, message: String): Boolean {
-        return BackendClient().verify(header, message)
         return Random.nextBoolean() // TODO add some logic
     }
 
