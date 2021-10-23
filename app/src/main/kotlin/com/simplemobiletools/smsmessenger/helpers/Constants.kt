@@ -38,6 +38,9 @@ const val THREAD_SENT_MESSAGE_ERROR = 4
 const val THREAD_SENT_MESSAGE_SENT = 5
 const val THREAD_SENT_MESSAGE_SENDING = 6
 
+//extra THREAD_RECEIVED signals
+const val THREAD_RECEIVED_VERIFIED_MESSAGE = 7
+
 // lock screen visibility constants
 const val LOCK_SCREEN_SENDER_MESSAGE = 1
 const val LOCK_SCREEN_SENDER = 2
@@ -54,3 +57,7 @@ const val FILE_SIZE_2_MB = 2_097_152L
 fun refreshMessages() {
     EventBus.getDefault().post(Events.RefreshMessages())
 }
+
+// SM20 unique constants
+const val SM_20_PROTOCOL_PREFIX = "SM20"
+

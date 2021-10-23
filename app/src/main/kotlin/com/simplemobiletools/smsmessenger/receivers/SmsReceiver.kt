@@ -10,8 +10,19 @@ import com.simplemobiletools.commons.extensions.isNumberBlocked
 import com.simplemobiletools.commons.helpers.ensureBackgroundThread
 import com.simplemobiletools.commons.models.SimpleContact
 import com.simplemobiletools.smsmessenger.extensions.*
+import com.simplemobiletools.smsmessenger.helpers.SM_20_PROTOCOL_PREFIX
 import com.simplemobiletools.smsmessenger.helpers.refreshMessages
+import com.simplemobiletools.smsmessenger.misc.BackendClient
 import com.simplemobiletools.smsmessenger.models.Message
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Dispatchers
+
+import io.ktor.client.*
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import kotlinx.coroutines.launch
+import kotlin.random.Random
+
 
 class SmsReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
@@ -51,14 +62,45 @@ class SmsReceiver : BroadcastReceiver() {
                         val participant = SimpleContact(0, 0, address, "", arrayListOf(address), ArrayList(), ArrayList())
                         val participants = arrayListOf(participant)
                         val messageDate = (date / 1000).toInt()
-                        val message = Message(newMessageId, body, type, status, participants, messageDate, false, threadId, false, null, address, "", subscriptionId)
+
+                        val message = context.messagesDB.getLatestMessageInThread(threadId).let { latestMessage ->
+                            val rsaHeader = Message.isHeader(body)
+                            if (latestMessage != null) {
+                                if (latestMessage.headerRSA) {
+                                    val verified = isAuthenticMessage(latestMessage.body, body)
+                                    return@let Message(newMessageId, body, type, status, participants, messageDate, false, threadId, false, null, address, "", subscriptionId, rsaHeader, verified)
+                                } else {
+                                    return@let Message(newMessageId, body, type, status, participants, messageDate, false, threadId, false, null, address, "", subscriptionId, rsaHeader, false)
+                                }
+                            } else {
+                                return@let Message(newMessageId, body, type, status, participants, messageDate, false, threadId, false, null, address, "", subscriptionId, rsaHeader, false)
+
+                            }
+                        }
+
                         context.messagesDB.insertOrUpdate(message)
                         refreshMessages()
+                        GlobalScope.launch (Dispatchers.Main) {
+                            sendGetRequest(message)
+                        }
                     }
-
-                    context.showReceivedMessageNotification(address, body, threadId, null)
                 }
+
+                context.showReceivedMessageNotification(address, body, threadId, null)
             }
         }
+    }
+
+    private fun isAuthenticMessage(header: String, message: String): Boolean {
+        return BackendClient().verify(header, message)
+        return Random.nextBoolean() // TODO add some logic
+    }
+
+    suspend fun sendGetRequest(message: Message) {
+        val client = HttpClient()
+        val response: HttpResponse = client.get("https://ktor.io/")
+        println(response.status)
+        println("DUPA")
+        client.close()
     }
 }

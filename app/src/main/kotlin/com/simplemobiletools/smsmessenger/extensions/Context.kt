@@ -104,15 +104,16 @@ fun Context.getMessages(threadId: Long): ArrayList<Message> {
         val status = cursor.getIntValue(Sms.STATUS)
         val participant = SimpleContact(0, 0, senderName, photoUri, arrayListOf(senderNumber), ArrayList(), ArrayList())
         val isMMS = false
-        val message = Message(id, body, type, status, arrayListOf(participant), date, read, thread, isMMS, null, senderName, photoUri, subscriptionId)
+        val message = Message(
+            id, body, type, status, arrayListOf(participant), date, read, thread, isMMS,
+            null, senderName, photoUri, subscriptionId, headerRSA = false, validationFlag = true
+        )
         messages.add(message)
     }
 
     messages.addAll(getMMS(threadId, sortOrder))
-    messages = messages.filter { it.participants.isNotEmpty() }
+    return messages.filter { it.participants.isNotEmpty() && !it.headerRSA }
         .sortedWith(compareBy<Message> { it.date }.thenBy { it.id }).toMutableList() as ArrayList<Message>
-
-    return messages
 }
 
 // as soon as a message contains multiple recipients it counts as an MMS instead of SMS
@@ -172,7 +173,8 @@ fun Context.getMMS(threadId: Long? = null, sortOrder: String? = null): ArrayList
             senderPhotoUri = namePhoto.photoUri ?: ""
         }
 
-        val message = Message(mmsId, body, type, status, participants, date, read, threadId, isMMS, attachment, senderName, senderPhotoUri, subscriptionId)
+        val message =
+            Message(mmsId, body, type, status, participants, date, read, threadId, isMMS, attachment, senderName, senderPhotoUri, subscriptionId, false, false)
         messages.add(message)
 
         participants.forEach {

@@ -98,6 +98,7 @@ class ThreadAdapter(
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val layout = when (viewType) {
             THREAD_DATE_TIME -> R.layout.item_thread_date_time
+            THREAD_RECEIVED_VERIFIED_MESSAGE -> R.layout.item_received_verified_message
             THREAD_RECEIVED_MESSAGE -> R.layout.item_received_message
             THREAD_SENT_MESSAGE_ERROR -> R.layout.item_thread_error
             THREAD_SENT_MESSAGE_SENT -> R.layout.item_thread_success
@@ -129,6 +130,7 @@ class ThreadAdapter(
         val item = messages[position]
         return when {
             item is ThreadDateTime -> THREAD_DATE_TIME
+            (messages[position] as? Message)?.isVerifiedRegularMessage() == true -> THREAD_RECEIVED_VERIFIED_MESSAGE
             (messages[position] as? Message)?.isReceivedMessage() == true -> THREAD_RECEIVED_MESSAGE
             item is ThreadError -> THREAD_SENT_MESSAGE_ERROR
             item is ThreadSent -> THREAD_SENT_MESSAGE_SENT

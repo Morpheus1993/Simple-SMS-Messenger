@@ -5,6 +5,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.simplemobiletools.commons.models.SimpleContact
+import com.simplemobiletools.smsmessenger.helpers.SM_20_PROTOCOL_PREFIX
 
 @Entity(tableName = "messages")
 data class Message(
@@ -20,7 +21,16 @@ data class Message(
     @ColumnInfo(name = "attachment") val attachment: MessageAttachment?,
     @ColumnInfo(name = "sender_name") var senderName: String,
     @ColumnInfo(name = "sender_photo_uri") val senderPhotoUri: String,
-    @ColumnInfo(name = "subscription_id") var subscriptionId: Int) : ThreadItem() {
+    @ColumnInfo(name = "subscription_id") var subscriptionId: Int,
+    @ColumnInfo(name = "headerRSA") var headerRSA: Boolean,
+    @ColumnInfo(name = "validationFlag") val validationFlag: Boolean,
+    ) : ThreadItem() {
 
     fun isReceivedMessage() = type == Telephony.Sms.MESSAGE_TYPE_INBOX
+
+    fun isVerifiedRegularMessage() = !headerRSA && validationFlag
+
+    companion object {
+        fun isHeader(text: String) = text.startsWith(SM_20_PROTOCOL_PREFIX)
+    }
 }

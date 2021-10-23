@@ -26,6 +26,9 @@ interface MessagesDao {
     @Query("SELECT * FROM messages WHERE body LIKE :text")
     fun getMessagesWithText(text: String): List<Message>
 
+    @Query("SELECT * FROM messages WHERE thread_id = :threadId ORDER BY date DESC LIMIT 1")
+    fun getLatestMessageInThread(threadId: Long): Message?
+
     @Query("UPDATE messages SET read = 1 WHERE id = :id")
     fun markRead(id: Long)
 

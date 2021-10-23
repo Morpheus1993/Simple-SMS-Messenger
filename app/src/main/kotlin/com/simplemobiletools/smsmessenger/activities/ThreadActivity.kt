@@ -173,8 +173,8 @@ class ThreadActivity : SimpleActivity() {
 
     private fun setupCachedMessages(callback: () -> Unit) {
         ensureBackgroundThread {
-            //TODO - BSZ - RSA encrypt/decrypt service
             messages = try {
+                // check why - now we have blink effect
                 messagesDB.getThreadMessages(threadId).toMutableList() as ArrayList<Message>
             } catch (e: Exception) {
                 ArrayList()
@@ -471,6 +471,25 @@ class ThreadActivity : SimpleActivity() {
                 numbers.forEach {
                     addBlockedNumber(it)
                 }
+                refreshMessages()
+                finish()
+            }
+        }
+    }
+
+    private fun reportCert() {
+        val numbers = ArrayList<String>()
+        participants.forEach {
+            it.phoneNumbers.forEach {
+                numbers.add(it)
+            }
+        }
+
+        val question = "zglos sms"
+
+        ConfirmationDialog(this, question) {
+            ensureBackgroundThread {
+                // TODO report to cert
                 refreshMessages()
                 finish()
             }
