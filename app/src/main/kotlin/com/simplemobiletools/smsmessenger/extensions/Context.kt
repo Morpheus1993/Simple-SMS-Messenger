@@ -21,16 +21,13 @@ import android.provider.ContactsContract.PhoneLookup
 import android.provider.OpenableColumns
 import android.provider.Telephony.*
 import android.text.TextUtils
-import android.view.inputmethod.EditorInfo
 import androidx.core.app.NotificationCompat
 import androidx.core.app.RemoteInput
 import com.simplemobiletools.commons.extensions.*
 import com.simplemobiletools.commons.helpers.*
 import com.simplemobiletools.commons.models.SimpleContact
 import com.simplemobiletools.smsmessenger.R
-import com.simplemobiletools.smsmessenger.activities.NewConversationActivity
 import com.simplemobiletools.smsmessenger.activities.ThreadActivity
-import com.simplemobiletools.smsmessenger.adapters.AutoCompleteTextViewAdapter
 import com.simplemobiletools.smsmessenger.databases.MessagesDatabase
 import com.simplemobiletools.smsmessenger.helpers.*
 import com.simplemobiletools.smsmessenger.interfaces.AttachmentsDao
@@ -40,12 +37,22 @@ import com.simplemobiletools.smsmessenger.interfaces.MessagesDao
 import com.simplemobiletools.smsmessenger.models.*
 import com.simplemobiletools.smsmessenger.receivers.DirectReplyReceiver
 import com.simplemobiletools.smsmessenger.receivers.MarkAsReadReceiver
+import io.ktor.client.*
+import io.ktor.client.call.*
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import io.ktor.http.*
 import kotlinx.android.synthetic.main.activity_thread.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+
 import java.io.FileNotFoundException
 import java.util.*
 import kotlin.collections.ArrayList
-import java.text.Normalizer
 import me.leolin.shortcutbadger.ShortcutBadger
+import org.json.JSONObject
+
 
 val Context.config: Config get() = Config.newInstance(applicationContext)
 
@@ -110,6 +117,9 @@ fun Context.getMessages(threadId: Long): ArrayList<Message> {
         val status = cursor.getIntValue(Sms.STATUS)
         val participant = SimpleContact(0, 0, senderName, photoUri, arrayListOf(senderNumber), ArrayList(), ArrayList())
         val isMMS = false
+//        val headerRSA = cursor.getIntValue(Sms.) == 1
+//        val validationFlag =
+        //TO DO READ VALUE headerRSA and validationFlag from DB / OR ??????????????????????????????
         val message =
             Message(id, body, type, status, arrayListOf(participant), date, read, thread, isMMS, null, senderName, photoUri, subscriptionId, false, false)
         messages.add(message)
@@ -118,29 +128,53 @@ fun Context.getMessages(threadId: Long): ArrayList<Message> {
     messages.addAll(getMMS(threadId, sortOrder))
     messages = messages.filter { it.participants.isNotEmpty() }
         .sortedWith(compareBy<Message> { it.date }.thenBy { it.id }).toMutableList() as ArrayList<Message>
-    return collectLastTwoSms(messages)
+    return validateSMS(messages)
 }
 
-private fun collectLastTwoSms(messages: ArrayList<Message>): ArrayList<Message> {
-
+private fun validateSMS(messages: ArrayList<Message>): ArrayList<Message> {
+    var id = String()
+    var text = String()
+    var signature = String()
     messages.forEach { message ->
         try {
             //message.headerRSA = false // only for testing
-            if (!message.headerRSA) { // todo add && !message.read
-                val pattern1 = Regex("^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$")
-                if (pattern1.containsMatchIn(message.body.subSequence(0, 128))) {
+            if (!message.headerRSA ) { // todo add && !message.read
+                val pattern1 = Regex("^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{4})\$")
+                if(message.body.subSequence(0, 4).equals("ST20")){
                     message.headerRSA = true
+                    id = message.body.subSequence(5, 9).toString()
+                    signature = message.body.subSequence(10, message.body.length).toString()
                 }
-                if(message.body.length > 128){
-                    val id = message.body.subSequence(128, 140)
+                else {
+                    text = message.body;
                 }
             }
         } catch (e: Exception) {
             println(e)
         }
     }
-
+    GlobalScope.launch (Dispatchers.Main) {
+        sendGetRequest(id, text, signature)
+    }
     return messages.filter { sms -> !sms.headerRSA } as ArrayList<Message>;
+}
+
+suspend fun sendGetRequest(id: String, text: String, signature: String) {
+    val client = HttpClient()
+    val test = JSONObject(mapOf(
+        "signature" to signature,
+        "text" to text,
+        "id" to id
+    ))
+    val response: HttpResponse =  client.post("https://crypto-sms.netlify.app/api/verify") {
+        contentType(ContentType.Application.Json)
+        body = test.toString()
+    }
+    val stringBody: String = response.receive()
+    println("----------------------------------------------")
+    println(response)
+    println(JSONObject(stringBody).get("message_valid"))
+    println("----------------------------------------------")
 }
 
 // as soon as a message contains multiple recipients it counts as an MMS instead of SMS

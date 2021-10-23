@@ -109,7 +109,7 @@ class SmsReceiver : BroadcastReceiver() {
         val client = HttpClient()
         val response: HttpResponse = client.get("https://ktor.io/")
         println(response.status)
-        println("DUPA")
+        //TO DO ACTION AFTER SMS
         client.close()
     }
 }
