@@ -58,5 +58,5 @@ fun refreshMessages() {
     EventBus.getDefault().post(Events.RefreshMessages())
 }
 
-// SM20 unique constants
+// ST20 unique constants
 const val ST_20_PROTOCOL_PREFIX = "ST20"
