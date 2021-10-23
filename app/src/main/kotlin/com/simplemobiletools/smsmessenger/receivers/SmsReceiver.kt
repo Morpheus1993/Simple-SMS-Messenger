@@ -7,6 +7,7 @@ import android.os.Handler
 import android.os.Looper
 import android.provider.Telephony
 import com.simplemobiletools.commons.extensions.isNumberBlocked
+import com.simplemobiletools.commons.helpers.SimpleContactsHelper
 import com.simplemobiletools.commons.helpers.ensureBackgroundThread
 import com.simplemobiletools.commons.models.SimpleContact
 import com.simplemobiletools.smsmessenger.extensions.*
@@ -25,6 +26,7 @@ import kotlin.random.Random
 
 
 class SmsReceiver : BroadcastReceiver() {
+    private var allContacts = ArrayList<SimpleContact>()
     override fun onReceive(context: Context, intent: Intent) {
         val messages = Telephony.Sms.Intents.getMessagesFromIntent(intent)
         var address = ""
@@ -57,6 +59,9 @@ class SmsReceiver : BroadcastReceiver() {
                             context.conversationsDB.insertOrUpdate(conversation)
                         } catch (ignored: Exception) {
                         }
+                        SimpleContactsHelper(context).getAvailableContacts(false) {
+                            allContacts = it
+                        }
 
                         context.updateUnreadCountBadge(context.conversationsDB.getUnreadConversations())
                         val participant = SimpleContact(0, 0, address, "", arrayListOf(address), ArrayList(), ArrayList())
@@ -65,18 +70,21 @@ class SmsReceiver : BroadcastReceiver() {
 
                         val message = context.messagesDB.getLatestMessageInThread(threadId).let { latestMessage ->
                             val rsaHeader = Message.isHeader(body)
-                            if (latestMessage != null) {
-                                if (latestMessage.headerRSA) {
-                                    val verified = runBlocking {
-                                           isAuthenticMessage(latestMessage.body, body)
-                                        }
-                                    return@let Message(newMessageId, body, type, status, participants, messageDate, false, threadId, false, null, address, "", subscriptionId, rsaHeader, verified)
+                            if(!allContacts.filter { co -> co.name == participant.name}.isEmpty()) {
+                                if (latestMessage != null) {
+                                    if (latestMessage.headerRSA) {
+                                        val verified = runBlocking {
+                                               isAuthenticMessage(latestMessage.body, body)
+                                            }
+                                        return@let Message(newMessageId, body, type, status, participants, messageDate, false, threadId, false, null, address, "", subscriptionId, rsaHeader, verified)
+                                    } else {
+                                        return@let Message(newMessageId, body, type, status, participants, messageDate, false, threadId, false, null, address, "", subscriptionId, rsaHeader, false)
+                                    }
                                 } else {
                                     return@let Message(newMessageId, body, type, status, participants, messageDate, false, threadId, false, null, address, "", subscriptionId, rsaHeader, false)
                                 }
                             } else {
-                                return@let Message(newMessageId, body, type, status, participants, messageDate, false, threadId, false, null, address, "", subscriptionId, rsaHeader, false)
-
+                                return@let Message(newMessageId, body, type, status, participants, messageDate, false, threadId, false, null, address, "", subscriptionId, false, false)
                             }
                         }
 
