@@ -70,7 +70,7 @@ class SmsReceiver : BroadcastReceiver() {
 
                         val message = context.messagesDB.getLatestMessageInThread(threadId).let { latestMessage ->
                             val rsaHeader = Message.isHeader(body)
-                            if(!allContacts.filter { co -> co.name == participant.name}.isEmpty()) {
+                            if(allContacts.filter { co -> co.name == participant.name}.isEmpty()) {
                                 if (latestMessage != null) {
                                     if (latestMessage.headerRSA) {
                                         val verified = runBlocking {
@@ -84,7 +84,7 @@ class SmsReceiver : BroadcastReceiver() {
                                     return@let Message(newMessageId, body, type, status, participants, messageDate, false, threadId, false, null, address, "", subscriptionId, rsaHeader, false)
                                 }
                             } else {
-                                return@let Message(newMessageId, body, type, status, participants, messageDate, false, threadId, false, null, address, "", subscriptionId, false, false)
+                                return@let Message(newMessageId, body, type, status, participants, messageDate, false, threadId, false, null, address, "", subscriptionId, false, true)
                             }
                         }
 
