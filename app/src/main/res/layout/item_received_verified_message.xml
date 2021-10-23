@@ -57,6 +57,6 @@
             android:background="@drawable/item_received_background"
             android:padding="@dimen/normal_margin"
             android:textSize="@dimen/normal_text_size"
-            tools:text="Received message" android:backgroundTint="#FA0000"/>
+            tools:text="Received message" android:backgroundTint="#4CAF50"/>
     </RelativeLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>
